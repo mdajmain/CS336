@@ -259,11 +259,14 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="subcategory">Subcategory <span class="required">*</span></label>
-                            <select id="subcategory" name="subcategory" required>
-                                <option value="">Select Category First</option>
-                            </select>
-                        </div>
+						    <label for="subcategory">Subcategory <span class="required">*</span></label>
+						    <select id="subcategory" name="subcategory" required>
+						        <option value="1">Truck</option>
+						        <option value="2">Hatchback</option>
+						        <option value="3">Sedan</option>
+						    </select>
+						</div>
+
                     </div>
                     
                     <div class="form-group">
@@ -320,23 +323,33 @@
     </div>
     
     <script>
-        // Set minimum dates
-        const now = new Date();
-        const nowStr = now.toISOString().slice(0,16);
-        document.getElementById('startDateTime').min = nowStr;
-        document.getElementById('startDateTime').value = nowStr;
-        
-        const tomorrow = new Date(now.getTime() + 24*60*60*1000);
-        const tomorrowStr = tomorrow.toISOString().slice(0,16);
-        document.getElementById('closeDateTime').min = tomorrowStr;
-        
-        // Load subcategories based on category selection
-        function loadSubcategories() {
-            // This would normally be an AJAX call
-            // For now, just enable the subcategory dropdown
-            const subcategorySelect = document.getElementById('subcategory');
-            subcategorySelect.innerHTML = '<option value="1">General</option>';
-        }
+    
+	    function toLocalDateTimeValue(date) {
+	        const pad = n => n.toString().padStart(2, '0');
+	        const year   = date.getFullYear();
+	        const month  = pad(date.getMonth() + 1);
+	        const day    = pad(date.getDate());
+	        const hour   = pad(date.getHours());
+	        const minute = pad(date.getMinutes());
+	        return `${year}-${month}-${day}T${hour}:${minute}`;
+	    }
+	
+	    const now = new Date();
+	    const nowStr = toLocalDateTimeValue(now);
+	    const startInput  = document.getElementById('startDateTime');
+	    const closeInput  = document.getElementById('closeDateTime');
+	
+	    // start: now
+	    startInput.min   = nowStr;
+	    startInput.value = nowStr;
+	
+	    // end: at least 24h later
+	    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+	    const tomorrowStr = toLocalDateTimeValue(tomorrow);
+	    closeInput.min   = tomorrowStr;
+	    closeInput.value = tomorrowStr;
+	
+
     </script>
 </body>
 </html>

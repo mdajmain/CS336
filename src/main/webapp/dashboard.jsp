@@ -142,11 +142,15 @@
                 <li><a href="browse.jsp">Browse Auctions</a></li>
                 <li><a href="create-auction.jsp">Sell Item</a></li>
                 <li><a href="my-bids.jsp">My Bids</a></li>
+                
+                
             </ul>
             
             <div class="user-info">
                 <span>Welcome, <%= user.getUsername() %></span>
                 <a href="logout" class="logout-btn">Logout</a>
+                <a href="notifications.jsp" class="logout-btn" style="margin-left: 15px;">Notifications</a>
+                
             </div>
         </div>
     </nav>

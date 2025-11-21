@@ -273,19 +273,43 @@
                                 String winnerName = rs.getString("winnerName");
                     %>
                     <tr class="auction-row" data-status="<%= status %>">
-                        <td><strong><%= rs.getString("itemName") %></strong></td>
-                        <td>$<%= String.format("%.2f", rs.getDouble("currentPrice")) %></td>
-                        <td><%= rs.getInt("bidCount") %></td>
-                        <td><span class="<%= statusClass %>"><%= status.toUpperCase() %></span></td>
-                        <td><%= rs.getTimestamp("closeDateTime") %></td>
-                        <td><%= winnerName != null ? winnerName : "-" %></td>
-                        <td>
-                            <a href="auction-details.jsp?id=<%= rs.getInt("auctionID") %>" class="action-btn">View</a>
-                            <% if ("pending".equals(status)) { %>
-                                <a href="edit-auction.jsp?id=<%= rs.getInt("auctionID") %>" class="action-btn">Edit</a>
-                            <% } %>
-                        </td>
-                    </tr>
+					    <td><strong><%= rs.getString("itemName") %></strong></td>
+					
+					    <td>$<%= String.format("%.2f", rs.getDouble("currentPrice")) %></td>
+					
+					    <td><%= rs.getInt("bidCount") %></td>
+					
+					    <td><span class="<%= statusClass %>"><%= status.toUpperCase() %></span></td>
+					
+					    <td><%= rs.getTimestamp("closeDateTime") %></td>
+					
+					    <td><%= winnerName != null ? winnerName : "-" %></td>
+					
+					    <!-- Single Actions column -->
+					    <td>
+					        <!-- Always show View -->
+					        <a href="auction-details.jsp?id=<%= rs.getInt("auctionID") %>" class="action-btn">
+					            View
+					        </a>
+					
+					        <!-- Show Edit only if pending -->
+					        <% if ("pending".equals(status)) { %>
+					            <a href="edit-auction.jsp?id=<%= rs.getInt("auctionID") %>" class="action-btn">
+					                Edit
+					            </a>
+					        <% } %>
+					
+					        <!-- Show End now only if active -->
+					        <% if ("active".equals(status)) { %>
+					            <a href="seller-close-auction.jsp?id=<%= rs.getInt("auctionID") %>" 
+					               class="action-btn"
+					               onclick="return confirm('End this auction now and sell at the current highest bid?');">
+					                End now
+					            </a>
+					        <% } %>
+					    </td>
+					</tr>
+
                     <%
                             }
                             

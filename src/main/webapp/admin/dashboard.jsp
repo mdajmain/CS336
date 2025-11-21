@@ -92,6 +92,8 @@
             <div>
                 <span>Welcome, <%= user.getUsername() %></span>
                 <a href="../logout" class="logout-btn">Logout</a>
+                
+                
             </div>
         </div>
     </nav>

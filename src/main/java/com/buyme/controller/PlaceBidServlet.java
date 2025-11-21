@@ -16,45 +16,79 @@ import java.sql.*;
 
 @WebServlet("/PlaceBidServlet")
 public class PlaceBidServlet extends HttpServlet {
-    
+
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
-        
+
         if (user == null) {
             response.sendRedirect("login");
             return;
         }
-        
+
         String auctionID = request.getParameter("auctionID");
-        String maxBidAmount = request.getParameter("maxBidAmount");
-        
-        if (auctionID == null || maxBidAmount == null) {
+        String bidAmountStr = request.getParameter("bidAmount");
+        String maxBidAmountStr = request.getParameter("maxBidAmount");
+        String useAuto = request.getParameter("useAuto");   // checkbox: "true" or null
+
+        if (auctionID == null || bidAmountStr == null) {
             response.sendRedirect("browse.jsp");
             return;
         }
-        
+
+        // Parse bidAmount safely
+        BigDecimal bidAmount;
+        try {
+            bidAmount = new BigDecimal(bidAmountStr);
+        } catch (NumberFormatException e) {
+            request.setAttribute("error", "Invalid bid amount");
+            request.getRequestDispatcher("/auction-details.jsp?id=" + auctionID).forward(request, response);
+            return;
+        }
+
+        // Decide maxBidLimit
+        BigDecimal maxBidLimit;
+
+        // User checked autobid and entered something
+        if ("true".equals(useAuto) &&
+                maxBidAmountStr != null &&
+                !maxBidAmountStr.isEmpty()) {
+
+            try {
+                maxBidLimit = new BigDecimal(maxBidAmountStr);
+            } catch (NumberFormatException e) {
+                request.setAttribute("error", "Invalid maximum bid amount");
+                request.getRequestDispatcher("/auction-details.jsp?id=" + auctionID).forward(request, response);
+                return;
+            }
+
+        } else {
+            // No auto → maxBidLimit = immediate bid
+            maxBidLimit = bidAmount;
+        }
+
         Connection conn = null;
-        
+
         try {
             conn = DatabaseConnection.getConnection();
             conn.setAutoCommit(false);
-            
-            // Call the stored procedure for placing bid with automatic bidding
+
+            // Stored procedure takes p_auctionID, p_buyerID, p_maxBidLimit
             CallableStatement cstmt = conn.prepareCall("{CALL place_bid(?, ?, ?)}");
             cstmt.setInt(1, Integer.parseInt(auctionID));
             cstmt.setInt(2, user.getUserID());
-            cstmt.setBigDecimal(3, new BigDecimal(maxBidAmount));
-            
+            cstmt.setBigDecimal(3, maxBidLimit);
+
             cstmt.execute();
             conn.commit();
-            
+
             request.setAttribute("success", "Bid placed successfully!");
-            
+
         } catch (SQLException e) {
+
             if (conn != null) {
                 try {
                     conn.rollback();
@@ -62,28 +96,30 @@ public class PlaceBidServlet extends HttpServlet {
                     ex.printStackTrace();
                 }
             }
-            
-            String errorMessage = e.getMessage();
-            if (errorMessage.contains("must be at least")) {
-                request.setAttribute("error", "Your bid must be higher than the current price plus increment");
-            } else if (errorMessage.contains("cannot bid on their own")) {
-                request.setAttribute("error", "You cannot bid on your own items");
+
+            String msg = e.getMessage();
+
+            if (msg.contains("must be at least")) {
+                request.setAttribute("error", "Your bid must be higher than the current minimum required.");
+            } else if (msg.contains("cannot bid on their own")) {
+                request.setAttribute("error", "You cannot bid on your own auction.");
             } else {
-                request.setAttribute("error", "Error placing bid: " + errorMessage);
+                request.setAttribute("error", "Error placing bid: " + msg);
             }
-            
+
         } finally {
             if (conn != null) {
                 try {
                     conn.setAutoCommit(true);
                     DatabaseConnection.closeConnection(conn);
-                } catch (SQLException e) {
-                    e.printStackTrace();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
                 }
             }
         }
-        
-        // Forward back to auction details page
+
+        // Forward back to auction page
         request.getRequestDispatcher("/auction-details.jsp?id=" + auctionID).forward(request, response);
     }
 }
+

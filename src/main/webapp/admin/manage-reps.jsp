@@ -275,11 +275,11 @@
                 <thead>
                     <tr>
                         <th>Rep ID</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Department</th>
-                        <th>Hire Date</th>
-                        <th>Actions</th>
+						<th>Username</th>
+						<th>Email</th>
+						<th>Department</th>
+						<th>Actions</th>
+
                     </tr>
                 </thead>
                 <tbody>
@@ -300,17 +300,17 @@
                     %>
                     <tr>
                         <td><%= rs.getInt("repID") %></td>
-                        <td><%= rs.getString("username") %></td>
-                        <td><%= rs.getString("email") %></td>
-                        <td><%= rs.getString("department") %></td>
-                        <td><%= rs.getDate("hireDate") != null ? rs.getDate("hireDate") : "N/A" %></td>
-                        <td>
-                            <form method="post" style="display: inline;">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="repID" value="<%= rs.getInt("repID") %>">
-                                <button type="submit" class="delete-btn" onclick="return confirm('Are you sure?')">Delete</button>
-                            </form>
-                        </td>
+						<td><%= rs.getString("username") %></td>
+						<td><%= rs.getString("email") %></td>
+						<td><%= rs.getString("department") %></td>
+						<td>
+						    <form method="post" style="display: inline;">
+						        <input type="hidden" name="action" value="delete">
+						        <input type="hidden" name="repID" value="<%= rs.getInt("repID") %>">
+						        <button type="submit" class="delete-btn" onclick="return confirm('Are you sure?')">Delete</button>
+						    </form>
+						</td>
+
                     </tr>
                     <%
                             }

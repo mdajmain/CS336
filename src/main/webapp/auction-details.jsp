@@ -392,33 +392,55 @@
                 
                 <% if ("active".equals(status) && !isOwnAuction) { %>
                 <form action="PlaceBidServlet" method="post" class="bid-form">
-                    <input type="hidden" name="auctionID" value="<%= auctionID %>">
-                    
-                    <label for="maxBidAmount" style="font-weight: 600; margin-bottom: 10px; display: block;">
-                        Enter Your Maximum Bid
-                    </label>
-                    
-                    <input type="number" 
-                           name="maxBidAmount" 
-                           id="maxBidAmount"
-                           class="bid-input" 
-                           min="<%= minBid %>" 
-                           step="0.01" 
-                           placeholder="Minimum: $<%= String.format("%.2f", minBid) %>"
-                           required>
-                    
-                    <button type="submit" class="bid-btn">Place Bid</button>
-                    
-                    <div class="help-text">
-                        <strong>Automatic Bidding:</strong> Enter the maximum you're willing to pay. 
-                        We'll bid incrementally on your behalf up to your max.
-                    </div>
-                    
-                    <div class="help-text" style="margin-top: 10px;">
-                        <strong>Minimum bid:</strong> $<%= String.format("%.2f", minBid) %> 
-                        (Current + $<%= String.format("%.2f", bidIncrement) %> increment)
-                    </div>
-                </form>
+				    <input type="hidden" name="auctionID" value="<%= auctionID %>">
+				
+				    <label for="bidAmount" style="font-weight: 600; margin-bottom: 10px; display: block;">
+				        Your bid amount
+				    </label>
+				
+				    <input type="number"
+				           name="bidAmount"
+				           id="bidAmount"
+				           class="bid-input"
+				           min="<%= minBid %>"
+				           step="0.01"
+				           placeholder="Minimum: $<%= String.format("%.2f", minBid) %>"
+				           required>
+				
+				    <div class="help-text" style="margin: 8px 0;">
+				        This is the amount you are bidding right now.
+				    </div>
+				
+				    <label style="display: block; margin-top: 10px;">
+				        <input type="checkbox" id="useAuto" name="useAuto" value="true"
+				               onclick="document.getElementById('autoMaxContainer').style.display = this.checked ? 'block' : 'none';">
+				        Use automatic bidding up to a higher maximum
+				    </label>
+				
+				    <div id="autoMaxContainer" style="display:none; margin-top: 10px;">
+				        <label for="maxBidAmount" style="font-weight: 600; margin-bottom: 5px; display: block;">
+				            Maximum you are willing to pay
+				        </label>
+				        <input type="number"
+				               name="maxBidAmount"
+				               id="maxBidAmount"
+				               class="bid-input"
+				               min="<%= minBid %>"
+				               step="0.01">
+				        <div class="help-text">
+				            We will automatically bid for you up to this maximum.
+				        </div>
+				    </div>
+				
+				    <button type="submit" class="bid-btn" style="margin-top: 15px;">Place Bid</button>
+				
+				    <div class="help-text" style="margin-top: 10px;">
+				        <strong>Minimum bid:</strong> $<%= String.format("%.2f", minBid) %>
+				        (Current + $<%= String.format("%.2f", bidIncrement) %> increment)
+				    </div>
+				</form>
+
+
                 <% } else if (isOwnAuction) { %>
                 <div class="alert alert-warning">
                     This is your own auction. You cannot bid on it.
