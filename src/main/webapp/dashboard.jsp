@@ -139,9 +139,11 @@
             
             <ul class="nav-menu">
                 <li><a href="dashboard.jsp">Home</a></li>
-                <li><a href="browse.jsp">Browse Auctions</a></li>
-                <li><a href="create-auction.jsp">Sell Item</a></li>
-                <li><a href="my-bids.jsp">My Bids</a></li>
+			    <li><a href="browse.jsp">Browse Auctions</a></li>
+			    <li><a href="create-auction.jsp">Sell Item</a></li>
+			    <li><a href="my-bids.jsp">My Bids</a></li>
+			    <li><a href="my-alerts.jsp">My Alerts</a></li>
+			    <li><a href="questions.jsp">Support</a></li>
                 
                 
             </ul>
@@ -185,6 +187,11 @@
                 <p>Manage your profile</p>
                 <a href="account.jsp">View Account</a>
             </div>
+            <div class="action-card">
+			    <h3>Support & Q&A</h3>
+			    <p>Ask questions and get help</p>
+			    <a href="questions.jsp">Get Support</a>
+			</div>
         </div>
     </div>
 </body>
