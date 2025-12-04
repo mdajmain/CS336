@@ -116,6 +116,11 @@
                 %></div>
                 <a href="manage-users.jsp">Manage Users</a>
             </div>
+            <div class="dashboard-card">
+			    <h3>Manage Bids</h3>
+			    <p>Remove inappropriate or fraudulent bids</p>
+			    <a href="manage-bids.jsp">Manage Bids</a>
+			</div>
             
             <div class="dashboard-card">
                 <h3>Active Auctions</h3>
@@ -158,6 +163,10 @@
                 %></div>
                 <a href="sales-report.jsp">View Reports</a>
             </div>
+           
+			
+			
+			            
         </div>
     </div>
 </body>
