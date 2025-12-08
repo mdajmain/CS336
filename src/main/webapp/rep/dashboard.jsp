@@ -265,14 +265,7 @@
                 <a href="manage-auctions.jsp" class="btn">View Auctions</a>
             </div>
             
-            <div class="dashboard-card">
-                <h3>
-                    <span class="icon">$</span>
-                    Manage Bids
-                </h3>
-                <p>Review and remove inappropriate or fraudulent bids. Handle bid disputes and ensure fair bidding practices.</p>
-                <a href="manage-bids.jsp" class="btn">View Bids</a>
-            </div>
+           
             
             <div class="dashboard-card">
                 <h3>

@@ -1,203 +1,314 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="com.buyme.model.User" %>
 <%@ page import="java.sql.*" %>
-
+<%@ page import="com.buyme.model.User" %>
 <%
-    // AUTH GUARD
+    // Session check - must be logged in as customer rep
     User user = (User) session.getAttribute("user");
-    String userType = (user == null || user.getUserType() == null)
-            ? null
-            : user.getUserType().trim();
-
-    if (user == null || !"customer_rep".equalsIgnoreCase(userType)) {
-        response.sendRedirect(request.getContextPath() + "/login");
-        return;
-    }
+	if (user == null || !"customer_rep".equals(user.getUserType())) {
+	    response.sendRedirect(request.getContextPath() + "/login");
+	    return;
+	}	
     
     String filter = request.getParameter("filter");
-    if (filter == null) filter = "active";
+    if (filter == null || filter.isEmpty()) {
+        filter = "all";
+    }
     
     String search = request.getParameter("search");
-    String message = request.getParameter("message");
-    String error = request.getParameter("error");
+    String message = (String) session.getAttribute("message");
+    String error = (String) session.getAttribute("error");
+    
+    // Clear session messages after reading
+    session.removeAttribute("message");
+    session.removeAttribute("error");
 %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Manage Auctions - BuyMe Rep</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Auctions | BuyMe Rep</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; min-height: 100vh; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
         
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 15px 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        
         .nav-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .back-btn { color: white; text-decoration: none; }
         
-        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+        .back-btn {
+            color: #4da6ff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
         
         .page-header {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
-        .page-header h1 { color: #333; margin-bottom: 10px; }
+        
+        .page-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .page-header p {
+            color: #666;
+        }
         
         .filters {
             display: flex;
-            gap: 15px;
             flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
             align-items: center;
-            margin-top: 15px;
         }
+        
         .filter-btn {
-            padding: 8px 16px;
-            border: 2px solid #667eea;
+            padding: 10px 20px;
             background: white;
-            color: #667eea;
-            border-radius: 20px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
             text-decoration: none;
-            transition: all 0.3s;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.2s;
         }
-        .filter-btn:hover, .filter-btn.active {
-            background: #667eea;
+        
+        .filter-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .filter-btn.active {
+            background: #1a1a2e;
             color: white;
+            border-color: #1a1a2e;
         }
         
         .search-box {
             display: flex;
-            gap: 10px;
             margin-left: auto;
         }
+        
         .search-box input {
-            padding: 8px 15px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px 0 0 25px;
+            font-size: 1rem;
             width: 250px;
         }
+        
         .search-box button {
-            padding: 8px 20px;
-            background: #667eea;
+            padding: 10px 20px;
+            background: #1a1a2e;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 0 25px 25px 0;
             cursor: pointer;
         }
         
         .alert {
-            padding: 15px;
-            border-radius: 5px;
+            padding: 15px 20px;
+            border-radius: 8px;
             margin-bottom: 20px;
+            font-weight: 500;
         }
-        .alert-success { background: #d4edda; color: #155724; }
-        .alert-error { background: #f8d7da; color: #721c24; }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
         
         .auctions-table {
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             overflow: hidden;
         }
+        
         table {
             width: 100%;
             border-collapse: collapse;
         }
+        
         th, td {
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #eee;
         }
+        
         th {
             background: #f8f9fa;
             font-weight: 600;
             color: #333;
         }
-        tr:hover { background: #f8f9fa; }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .price {
+            color: #27ae60;
+            font-weight: 600;
+        }
         
         .status-badge {
             padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
             font-weight: 600;
         }
-        .status-active { background: #d4edda; color: #155724; }
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-closed { background: #e2e3e5; color: #383d41; }
-        .status-cancelled { background: #f8d7da; color: #721c24; }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-closed {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
         
         .action-btn {
             padding: 6px 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
-            margin-right: 5px;
+            font-size: 0.85rem;
             text-decoration: none;
-            display: inline-block;
+            margin-right: 5px;
         }
-        .btn-view { background: #17a2b8; color: white; }
-        .btn-remove { background: #dc3545; color: white; }
-        .btn-view:hover { background: #138496; }
-        .btn-remove:hover { background: #c82333; }
+        
+        .btn-view {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-view:hover {
+            background: #2980b9;
+        }
+        
+        .btn-remove {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-remove:hover {
+            background: #c0392b;
+        }
         
         .no-results {
-            padding: 50px;
             text-align: center;
+            padding: 40px;
             color: #666;
         }
         
-        .price { font-weight: 600; color: #27ae60; }
-        
+        /* Modal Styles */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
             background: rgba(0,0,0,0.5);
-            z-index: 1000;
             justify-content: center;
             align-items: center;
+            z-index: 1000;
         }
+        
         .modal {
             background: white;
             padding: 30px;
-            border-radius: 10px;
+            border-radius: 12px;
             max-width: 500px;
             width: 90%;
         }
-        .modal h3 { margin-bottom: 20px; }
-        .modal textarea {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            min-height: 100px;
+        
+        .modal h3 {
             margin-bottom: 15px;
         }
-        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
-        .modal-buttons button {
+        
+        .modal textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            margin: 15px 0;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
             padding: 10px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
         }
-        .btn-cancel { background: #6c757d; color: white; }
-        .btn-confirm { background: #dc3545; color: white; }
+        
+        .btn-confirm {
+            background: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -306,7 +417,8 @@
                         <td><%= closeDateTime %></td>
                         <td><span class="status-badge status-<%= status %>"><%= status.toUpperCase() %></span></td>
                         <td>
-                            <a href="<%= request.getContextPath() %>/auction/view.jsp?id=<%= auctionID %>" class="action-btn btn-view" target="_blank">View</a>
+                            <!-- FIXED: Now points to rep/view.jsp instead of auction/auction-details.jsp -->
+                            <a href="view.jsp?id=<%= auctionID %>" class="action-btn btn-view" target="_blank">View</a>
                             <% if (!"cancelled".equals(status)) { %>
                                 <button class="action-btn btn-remove" onclick="showRemoveModal(<%= auctionID %>, '<%= itemName.replace("'", "\\'").replace("\"", "\\\"") %>')">Remove</button>
                             <% } %>

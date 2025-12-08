@@ -143,31 +143,193 @@
             message = "User has been unsuspended.";
             
         } else if ("delete".equals(action)) {
-            // First, check if user has any active auctions
-            try (PreparedStatement checkAuctions = conn.prepareStatement(
-                "SELECT COUNT(*) FROM auction WHERE sellerID = ? AND status = 'active'")) {
-                checkAuctions.setInt(1, targetUserID);
-                try (ResultSet auctionRs = checkAuctions.executeQuery()) {
-                    auctionRs.next();
-                    if (auctionRs.getInt(1) > 0) {
-                        response.sendRedirect("manage-users.jsp?error=Cannot delete user with active auctions. Cancel their auctions first.");
+            // ============================================
+            // CASCADE DELETE - Delete all related records
+            // ============================================
+            
+            // Use transaction to ensure all-or-nothing deletion
+            conn.setAutoCommit(false);
+            
+            try {
+                // 1. Get all auction IDs owned by this user
+                java.util.List<Integer> userAuctionIDs = new java.util.ArrayList<>();
+                try (PreparedStatement getAuctions = conn.prepareStatement(
+                    "SELECT auctionID FROM auction WHERE sellerID = ?")) {
+                    getAuctions.setInt(1, targetUserID);
+                    try (ResultSet rs = getAuctions.executeQuery()) {
+                        while (rs.next()) {
+                            userAuctionIDs.add(rs.getInt("auctionID"));
+                        }
+                    }
+                }
+                
+                // 2. Delete notifications that reference user's auctions (BEFORE deleting auctions)
+                for (Integer auctionID : userAuctionIDs) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM notification WHERE relatedAuctionID = ?")) {
+                        ps.setInt(1, auctionID);
+                        ps.executeUpdate();
+                    }
+                }
+                
+                // 3. Delete notifications for this user (by userID)
+                try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM notification WHERE userID = ?")) {
+                    ps.setInt(1, targetUserID);
+                    ps.executeUpdate();
+                }
+                
+                // 4. Delete questions that reference user's auctions
+                for (Integer auctionID : userAuctionIDs) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM question WHERE auctionID = ?")) {
+                        ps.setInt(1, auctionID);
+                        ps.executeUpdate();
+                    }
+                }
+                
+                // 5. Delete questions by this user
+                try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM question WHERE userID = ?")) {
+                    ps.setInt(1, targetUserID);
+                    ps.executeUpdate();
+                }
+                
+                // 6. Delete bid_history for user's auctions
+                for (Integer auctionID : userAuctionIDs) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM bid_history WHERE auctionID = ?")) {
+                        ps.setInt(1, auctionID);
+                        ps.executeUpdate();
+                    }
+                }
+                
+                // 7. Delete bid_history BY this user
+                try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM bid_history WHERE buyerID = ?")) {
+                    ps.setInt(1, targetUserID);
+                    ps.executeUpdate();
+                }
+                
+                // 8. Delete bids ON user's auctions
+                for (Integer auctionID : userAuctionIDs) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM bid WHERE auctionID = ?")) {
+                        ps.setInt(1, auctionID);
+                        ps.executeUpdate();
+                    }
+                }
+                
+                // 9. Delete bids BY this user
+                try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM bid WHERE buyerID = ?")) {
+                    ps.setInt(1, targetUserID);
+                    ps.executeUpdate();
+                }
+                
+                // 10. Delete sales_report entries (as buyer or seller, or for user's auctions)
+                for (Integer auctionID : userAuctionIDs) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM sales_report WHERE auctionID = ?")) {
+                        ps.setInt(1, auctionID);
+                        ps.executeUpdate();
+                    }
+                }
+                try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM sales_report WHERE buyerID = ? OR sellerID = ?")) {
+                    ps.setInt(1, targetUserID);
+                    ps.setInt(2, targetUserID);
+                    ps.executeUpdate();
+                }
+                
+                // 11. Delete alerts for this user
+                try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM alert WHERE userID = ?")) {
+                    ps.setInt(1, targetUserID);
+                    ps.executeUpdate();
+                }
+                
+                // 12. Delete suspension log entries (if table exists)
+                try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM user_suspension_log WHERE userID = ?")) {
+                    ps.setInt(1, targetUserID);
+                    ps.executeUpdate();
+                } catch (SQLException e) {
+                    // Table might not exist, ignore
+                }
+                
+                // 13. Clear winner references in ALL auctions where this user won
+                try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE auction SET winnerID = NULL WHERE winnerID = ?")) {
+                    ps.setInt(1, targetUserID);
+                    ps.executeUpdate();
+                }
+                
+                // 14. Delete user's auctions and their items
+                for (Integer auctionID : userAuctionIDs) {
+                    // Get itemID first
+                    int itemID = 0;
+                    try (PreparedStatement getItem = conn.prepareStatement(
+                        "SELECT itemID FROM auction WHERE auctionID = ?")) {
+                        getItem.setInt(1, auctionID);
+                        try (ResultSet rs = getItem.executeQuery()) {
+                            if (rs.next()) {
+                                itemID = rs.getInt("itemID");
+                            }
+                        }
+                    }
+                    
+                    // Delete the auction
+                    try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM auction WHERE auctionID = ?")) {
+                        ps.setInt(1, auctionID);
+                        ps.executeUpdate();
+                    }
+                    
+                    // Delete item_field and item
+                    if (itemID > 0) {
+                        try (PreparedStatement ps = conn.prepareStatement(
+                            "DELETE FROM item_field WHERE itemID = ?")) {
+                            ps.setInt(1, itemID);
+                            ps.executeUpdate();
+                        }
+                        
+                        try (PreparedStatement ps = conn.prepareStatement(
+                            "DELETE FROM item WHERE itemID = ?")) {
+                            ps.setInt(1, itemID);
+                            ps.executeUpdate();
+                        }
+                    }
+                }
+                
+                // 15. Delete from end_user table
+                try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM end_user WHERE userID = ?")) {
+                    ps.setInt(1, targetUserID);
+                    ps.executeUpdate();
+                }
+                
+                // 16. Finally, delete the user
+                try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM user WHERE userID = ?")) {
+                    ps.setInt(1, targetUserID);
+                    int deleted = ps.executeUpdate();
+                    
+                    if (deleted > 0) {
+                        conn.commit();
+                        message = "User and all associated data have been permanently deleted.";
+                    } else {
+                        conn.rollback();
+                        response.sendRedirect("manage-users.jsp?error=Failed to delete user");
                         return;
                     }
                 }
-            }
-            
-            // Delete user (cascade will handle related records)
-            try (PreparedStatement ps = conn.prepareStatement(
-                "DELETE FROM user WHERE userID = ?")) {
-                ps.setInt(1, targetUserID);
-                int deleted = ps.executeUpdate();
                 
-                if (deleted > 0) {
-                    message = "User has been deleted.";
-                } else {
-                    response.sendRedirect("manage-users.jsp?error=Failed to delete user");
-                    return;
-                }
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
         }
         
@@ -178,3 +340,4 @@
         response.sendRedirect("manage-users.jsp?error=" + java.net.URLEncoder.encode("Error: " + e.getMessage(), "UTF-8"));
     }
 %>
+
