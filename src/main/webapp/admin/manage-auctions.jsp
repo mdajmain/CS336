@@ -4,7 +4,7 @@
 
 <%
     User user = (User) session.getAttribute("user");
-    if (user == null || !"customer_rep".equals(user.getUserType())) {
+    if (user == null || !"admin".equals(user.getUserType())) {
         response.sendRedirect("../login");
         return;
     }

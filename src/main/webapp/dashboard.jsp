@@ -192,7 +192,7 @@
 			    <p>Ask questions and get help</p>
 			    <a href="questions.jsp">Get Support</a>
 			</div>
-			<div class="dashboard-card">
+			<div class="action-card">
 			    <h3>My Auctions</h3>
 			    <p>View and manage the items you are selling.</p>
 			    <a href="my-auctions.jsp">Go to My Auctions</a>
