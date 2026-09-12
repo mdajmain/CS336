@@ -51,6 +51,48 @@ public class BidDAO {
         return bids;
     }
 
+    // 1b) Same as above, paginated (used by pages that page through long bid histories)
+    public List<Bid> getBidHistoryForAuction(int auctionID, int limit, int offset) {
+        List<Bid> bids = new ArrayList<>();
+
+        String sql =
+            "SELECT bh.historyID, bh.auctionID, bh.buyerID, " +
+            "       bh.bidAmount, bh.actualBid, bh.bidTime, bh.wasWinning, " +
+            "       u.username AS buyerUsername " +
+            "FROM bid_history bh " +
+            "JOIN end_user e ON bh.buyerID = e.userID " +
+            "JOIN user u ON e.userID = u.userID " +
+            "WHERE bh.auctionID = ? " +
+            "ORDER BY bh.bidTime DESC " +
+            "LIMIT ? OFFSET ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, auctionID);
+            pstmt.setInt(2, limit);
+            pstmt.setInt(3, offset);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Bid bid = new Bid();
+                bid.setAuctionID(rs.getInt("auctionID"));
+                bid.setBuyerID(rs.getInt("buyerID"));
+                bid.setBidAmount(rs.getBigDecimal("bidAmount"));
+                bid.setMaxBidLimit(rs.getBigDecimal("actualBid"));
+                bid.setBidTime(rs.getTimestamp("bidTime"));
+                bid.setWinning(rs.getBoolean("wasWinning"));
+                bid.setBuyerUsername(rs.getString("buyerUsername"));
+
+                bids.add(bid);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return bids;
+    }
+
     // 2) All auctions a given buyer has participated in
     // Uses your user_bidding_history view
     public List<Bid> getBiddingHistoryForUser(int buyerID) {

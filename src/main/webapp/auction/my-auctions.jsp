@@ -9,10 +9,6 @@
             ? null
             : user.getUserType().trim();
 
-    if (user == null || !"end_user".equalsIgnoreCase(userType)) {
-        response.sendRedirect(request.getContextPath() + "/login");
-        return;
-    }
     
     String filter = request.getParameter("filter");
     if (filter == null) filter = "all";
@@ -240,25 +236,11 @@
             int totalAuctions = 0, activeAuctions = 0, soldItems = 0;
             double totalEarnings = 0;
             
+            com.buyme.dao.AuctionDAO statsDAO = new com.buyme.dao.AuctionDAO();
+            totalAuctions = statsDAO.countAuctionsBySeller(user.getUserID());
+            activeAuctions = statsDAO.countActiveAuctionsBySeller(user.getUserID());
+
             try (Connection conn = com.buyme.util.DatabaseConnection.getConnection()) {
-                // Total auctions
-                try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT COUNT(*) FROM auction WHERE sellerID = ?")) {
-                    ps.setInt(1, user.getUserID());
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) totalAuctions = rs.getInt(1);
-                    }
-                }
-                
-                // Active auctions
-                try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT COUNT(*) FROM auction WHERE sellerID = ? AND status = 'active'")) {
-                    ps.setInt(1, user.getUserID());
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) activeAuctions = rs.getInt(1);
-                    }
-                }
-                
                 // Sold items and earnings
                 try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT COUNT(*), COALESCE(SUM(finalPrice), 0) FROM sales_report WHERE sellerID = ?")) {

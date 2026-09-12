@@ -217,6 +217,53 @@ public class AuctionDAO {
         return auctions;
     }
     
+    public int countActiveAuctions() {
+        String sql = "SELECT COUNT(*) FROM auction WHERE status = 'active'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countAuctionsBySeller(int sellerID) {
+        String sql = "SELECT COUNT(*) FROM auction WHERE sellerID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, sellerID);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countActiveAuctionsBySeller(int sellerID) {
+        String sql = "SELECT COUNT(*) FROM auction WHERE sellerID = ? AND status = 'active'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, sellerID);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     private Auction mapResultSetToAuction(ResultSet rs) throws SQLException {
         Auction auction = new Auction();
         auction.setAuctionID(rs.getInt("auctionID"));

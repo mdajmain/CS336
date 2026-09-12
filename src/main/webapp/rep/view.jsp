@@ -5,10 +5,6 @@
 <%
     // Session check - must be logged in as customer rep
     User user = (User) session.getAttribute("user");
-	if (user == null || !"customer_rep".equals(user.getUserType())) {
-	    response.sendRedirect(request.getContextPath() + "/login");
-	    return;
-	}
     // Get auction ID
     String idParam = request.getParameter("id");
     if (idParam == null || idParam.trim().isEmpty()) {
@@ -634,27 +630,18 @@
                     
                     <%
                         // Get seller stats
-                        String sellerStatsSql = "SELECT COUNT(*) as totalAuctions, " +
-                                               "(SELECT COUNT(*) FROM auction WHERE sellerID = ? AND status = 'active') as activeAuctions " +
-                                               "FROM auction WHERE sellerID = ?";
-                        try (PreparedStatement statsPs = conn.prepareStatement(sellerStatsSql)) {
-                            statsPs.setInt(1, sellerID);
-                            statsPs.setInt(2, sellerID);
-                            ResultSet statsRs = statsPs.executeQuery();
-                            if (statsRs.next()) {
+                        com.buyme.dao.AuctionDAO sellerStatsDAO = new com.buyme.dao.AuctionDAO();
+                        int sellerTotalAuctions = sellerStatsDAO.countAuctionsBySeller(sellerID);
+                        int sellerActiveAuctions = sellerStatsDAO.countActiveAuctionsBySeller(sellerID);
                     %>
                     <div class="detail-row">
                         <span class="detail-label">Total Auctions</span>
-                        <span class="detail-value"><%= statsRs.getInt("totalAuctions") %></span>
+                        <span class="detail-value"><%= sellerTotalAuctions %></span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Active Auctions</span>
-                        <span class="detail-value"><%= statsRs.getInt("activeAuctions") %></span>
+                        <span class="detail-value"><%= sellerActiveAuctions %></span>
                     </div>
-                    <%
-                            }
-                        }
-                    %>
                 </div>
             </div>
             

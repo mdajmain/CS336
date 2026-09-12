@@ -4,10 +4,6 @@
 
 <%
     User user = (User) session.getAttribute("user");
-    if (user == null || !"admin".equals(user.getUserType())) {
-        response.sendRedirect("../login");
-        return;
-    }
 
     String message = null;
     String error = null;

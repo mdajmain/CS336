@@ -1,6 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.buyme.model.User" %>
+<%@ page import="com.buyme.model.Bid" %>
+<%@ page import="com.buyme.dao.BidDAO" %>
 <%@ page import="java.sql.*" %>
+<%@ page import="java.util.List" %>
 
 <%
     User user = (User) session.getAttribute("user");
@@ -210,7 +213,7 @@
                 // Pagination
                 int page_ = 1;
                 try {
-                    page = Integer.parseInt(request.getParameter("page"));
+                    page_ = Integer.parseInt(request.getParameter("page"));
                 } catch (Exception e) {}
                 int perPage = 25;
                 int offset = (page_ - 1) * perPage;
@@ -250,25 +253,16 @@
                 </thead>
                 <tbody>
                     <%
-                        String bidsSql = "SELECT bh.*, u.username FROM bid_history bh " +
-                                        "JOIN user u ON bh.buyerID = u.userID " +
-                                        "WHERE bh.auctionID = ? ORDER BY bh.bidTime DESC LIMIT ? OFFSET ?";
-                        
-                        try (PreparedStatement ps = conn.prepareStatement(bidsSql)) {
-                            ps.setInt(1, auctionID);
-                            ps.setInt(2, perPage);
-                            ps.setInt(3, offset);
-                            
-                            try (ResultSet rs = ps.executeQuery()) {
-                                int rank = offset;
-                                while (rs.next()) {
-                                    rank++;
-                                    int buyerID = rs.getInt("buyerID");
-                                    String username = rs.getString("username");
-                                    double bidAmount = rs.getDouble("bidAmount");
-                                    Timestamp bidTime = rs.getTimestamp("bidTime");
-                                    
-                                    boolean isWinner = winnerID != null && buyerID == winnerID && rank == offset + 1;
+                        List<Bid> pageBids = new BidDAO().getBidHistoryForAuction(auctionID, perPage, offset);
+                        int rank = offset;
+                        for (Bid pageBid : pageBids) {
+                            rank++;
+                            int buyerID = pageBid.getBuyerID();
+                            String username = pageBid.getBuyerUsername();
+                            double bidAmount = pageBid.getBidAmount().doubleValue();
+                            Timestamp bidTime = pageBid.getBidTime();
+
+                            boolean isWinner = winnerID != null && buyerID == winnerID && rank == offset + 1;
                     %>
                     <tr class="<%= isWinner ? "winning-row" : "" %>">
                         <td class="rank"><%= rank %></td>
@@ -280,8 +274,6 @@
                         <td class="time"><%= bidTime %></td>
                     </tr>
                     <%
-                                }
-                            }
                         }
                     %>
                 </tbody>

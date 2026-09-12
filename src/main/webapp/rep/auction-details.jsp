@@ -4,10 +4,6 @@
 
 <%
     User user = (User) session.getAttribute("user");
-    if (user == null || !"customer_rep".equals(user.getUserType())) {
-        response.sendRedirect(request.getContextPath() + "/login");
-        return;
-    }
 
     String auctionIdStr = request.getParameter("id");
     if (auctionIdStr == null) {

@@ -9,10 +9,6 @@
             ? null
             : user.getUserType().trim();
 
-    if (user == null || !"end_user".equalsIgnoreCase(userType)) {
-        response.sendRedirect(request.getContextPath() + "/login?error=Please login to create an auction");
-        return;
-    }
     
     String message = request.getParameter("message");
     String error = request.getParameter("error");

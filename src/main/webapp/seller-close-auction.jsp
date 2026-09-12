@@ -4,10 +4,6 @@
 
 <%
     User user = (User) session.getAttribute("user");
-    if (user == null) {
-        response.sendRedirect("login.jsp");
-        return;
-    }
 
     String auctionIdParam = request.getParameter("id");
     if (auctionIdParam == null || auctionIdParam.trim().isEmpty()) {

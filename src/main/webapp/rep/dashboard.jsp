@@ -9,10 +9,6 @@
             ? null
             : user.getUserType().trim();
 
-    if (user == null || !"customer_rep".equalsIgnoreCase(userType)) {
-        response.sendRedirect(request.getContextPath() + "/login");
-        return;
-    }
     
     // Get statistics for dashboard
     int openQuestions = 0;
@@ -29,11 +25,7 @@
         }
         
         // Count active auctions
-        try (PreparedStatement ps2 = conn.prepareStatement(
-            "SELECT COUNT(*) FROM auction WHERE status = 'active'");
-             ResultSet rs2 = ps2.executeQuery()) {
-            if (rs2.next()) activeAuctions = rs2.getInt(1);
-        }
+        activeAuctions = new com.buyme.dao.AuctionDAO().countActiveAuctions();
         
         // Count total end users
         try (PreparedStatement ps3 = conn.prepareStatement(

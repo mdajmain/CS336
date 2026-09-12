@@ -9,10 +9,6 @@
             ? null
             : user.getUserType().trim();
 
-    if (user == null || !"customer_rep".equalsIgnoreCase(userType)) {
-        response.sendRedirect(request.getContextPath() + "/login");
-        return;
-    }
     
     String search = request.getParameter("search");
     String searchType = request.getParameter("searchType");

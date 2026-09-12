@@ -9,10 +9,6 @@
             ? null
             : user.getUserType().trim();
 
-    if (user == null || !"admin".equalsIgnoreCase(userType)) {
-        response.sendRedirect(request.getContextPath() + "/login");
-        return;
-    }
 
     String message = null;
     String error = null;

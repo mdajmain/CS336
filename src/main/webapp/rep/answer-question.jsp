@@ -10,10 +10,6 @@
             ? null
             : user.getUserType().trim();
 
-    if (user == null || !"customer_rep".equalsIgnoreCase(userType)) {
-        response.sendRedirect(request.getContextPath() + "/login");
-        return;
-    }
     
     String questionIDStr = request.getParameter("questionID");
     String answer = request.getParameter("answer");

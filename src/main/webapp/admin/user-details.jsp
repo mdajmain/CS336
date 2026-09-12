@@ -5,10 +5,6 @@
 
 <%
     User admin = (User) session.getAttribute("user");
-    if (admin == null || !"admin".equals(admin.getUserType())) {
-        response.sendRedirect("../login");
-        return;
-    }
 
     String userIdStr = request.getParameter("userID");
     if (userIdStr == null) {

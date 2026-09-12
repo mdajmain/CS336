@@ -5,10 +5,6 @@
 
 <%
     User currentUser = (User) session.getAttribute("user");
-    if (currentUser == null) {
-        response.sendRedirect("login");
-        return;
-    }
 
     String userIDParam = request.getParameter("userID");
     if (userIDParam == null) {

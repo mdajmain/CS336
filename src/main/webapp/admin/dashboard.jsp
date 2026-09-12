@@ -2,10 +2,6 @@
 <%@ page import="com.buyme.model.User" %>
 <%
     User user = (User) session.getAttribute("user");
-    if (user == null || !"admin".equals(user.getUserType())) {
-        response.sendRedirect("../login");
-        return;
-    }
 %>
 <!DOCTYPE html>
 <html>
@@ -124,15 +120,7 @@
             
             <div class="dashboard-card">
                 <h3>Active Auctions</h3>
-                <div class="number"><%
-                    try {
-                        java.sql.Connection conn = com.buyme.util.DatabaseConnection.getConnection();
-                        java.sql.Statement stmt = conn.createStatement();
-                        java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM auction WHERE status='active'");
-                        if(rs.next()) out.print(rs.getInt(1));
-                        conn.close();
-                    } catch(Exception e) { out.print("0"); }
-                %></div>
+                <div class="number"><%= new com.buyme.dao.AuctionDAO().countActiveAuctions() %></div>
                 <a href="manage-auctions.jsp">View Auctions</a>
             </div>
             

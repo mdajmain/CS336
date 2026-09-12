@@ -4,10 +4,6 @@
 <%
     // Session check - must be logged in as customer rep
     User user = (User) session.getAttribute("user");
-	if (user == null || !"customer_rep".equals(user.getUserType())) {
-	    response.sendRedirect(request.getContextPath() + "/login");
-	    return;
-	}	
     
     String filter = request.getParameter("filter");
     if (filter == null || filter.isEmpty()) {

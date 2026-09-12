@@ -5,10 +5,6 @@
 <%@ page import="java.text.SimpleDateFormat" %>
 <%
     User user = (User) session.getAttribute("user");
-    if (user == null) {
-        response.sendRedirect("login");
-        return;
-    }
     
     // Get search/filter parameters
     String search = request.getParameter("search");

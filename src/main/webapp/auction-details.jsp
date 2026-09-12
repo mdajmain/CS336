@@ -1,14 +1,13 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.buyme.model.User" %>
+<%@ page import="com.buyme.model.Bid" %>
+<%@ page import="com.buyme.dao.BidDAO" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.math.BigDecimal" %>
 <%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="java.util.List" %>
 <%
     User user = (User) session.getAttribute("user");
-    if (user == null) {
-        response.sendRedirect("login");
-        return;
-    }
     
     String auctionID = request.getParameter("id");
     if (auctionID == null) {
@@ -557,32 +556,19 @@
                 </thead>
                 <tbody>
                     <%
-                        PreparedStatement histStmt = conn.prepareStatement(
-                            "SELECT bh.*, u.username, " +
-                            "CASE WHEN bh.wasWinning = TRUE THEN 'Was Winning' ELSE '' END as bidStatus " +
-                            "FROM bid_history bh " +
-                            "JOIN user u ON bh.buyerID = u.userID " +
-                            "WHERE bh.auctionID = ? " +
-                            "ORDER BY bh.bidTime DESC"
-                        );
-                        histStmt.setInt(1, Integer.parseInt(auctionID));
-                        ResultSet histRs = histStmt.executeQuery();
-                        
-                        boolean hasHistory = false;
+                        List<Bid> bidHistory = new BidDAO().getBidHistoryForAuction(Integer.parseInt(auctionID));
                         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm:ss");
-                        while(histRs.next()) {
-                            hasHistory = true;
-                            String bidStatus = histRs.getString("bidStatus");
+                        for (Bid histBid : bidHistory) {
                     %>
                     <tr>
-                        <td><%= histRs.getString("username") %></td>
-                        <td><strong>$<%= String.format("%.2f", histRs.getDouble("bidAmount")) %></strong></td>
-                        <td><%= sdf.format(histRs.getTimestamp("bidTime")) %></td>
-                        <td><%= bidStatus != null && !bidStatus.isEmpty() ? bidStatus : "-" %></td>
+                        <td><%= histBid.getBuyerUsername() %></td>
+                        <td><strong>$<%= String.format("%.2f", histBid.getBidAmount().doubleValue()) %></strong></td>
+                        <td><%= sdf.format(histBid.getBidTime()) %></td>
+                        <td><%= histBid.isWinning() ? "Was Winning" : "-" %></td>
                     </tr>
                     <%
                         }
-                        if (!hasHistory) {
+                        if (bidHistory.isEmpty()) {
                             out.println("<tr><td colspan='4' style='text-align:center; color:#999; padding: 30px;'>No bids yet. Be the first to bid!</td></tr>");
                         }
                     %>

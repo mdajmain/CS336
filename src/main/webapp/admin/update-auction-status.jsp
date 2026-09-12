@@ -1,7 +1,10 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="com.buyme.util.DatabaseConnection" %>
+<%@ page import="com.buyme.model.User" %>
 
 <%
+    User user = (User) session.getAttribute("user");
+
     String action = request.getParameter("action");
     String id = request.getParameter("id");
 

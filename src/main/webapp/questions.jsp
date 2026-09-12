@@ -4,10 +4,6 @@
 <%@ page import="java.text.SimpleDateFormat" %>
 <%
     User user = (User) session.getAttribute("user");
-    if (user == null) {
-        response.sendRedirect("login");
-        return;
-    }
     
     // Get view mode and search parameters
     String viewMode = request.getParameter("view");

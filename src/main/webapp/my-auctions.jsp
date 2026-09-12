@@ -3,10 +3,6 @@
 <%@ page import="java.sql.*" %>
 <%
     User user = (User) session.getAttribute("user");
-    if (user == null || !"end_user".equals(user.getUserType())) {
-        response.sendRedirect("login");
-        return;
-    }
 
     String success = (String) request.getAttribute("success");
     String error = (String) request.getAttribute("error");

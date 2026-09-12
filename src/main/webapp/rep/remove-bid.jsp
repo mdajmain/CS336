@@ -4,10 +4,6 @@
 <%@ page import="com.buyme.util.DatabaseConnection" %>
 <%
     User user = (User) session.getAttribute("user");
-    if (user == null || !"customer_rep".equals(user.getUserType())) {
-        response.sendRedirect("../login");
-        return;
-    }
     
     String bidIDStr = request.getParameter("bidID");
     String auctionIDStr = request.getParameter("auctionID");
