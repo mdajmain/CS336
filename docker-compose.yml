@@ -1,0 +1,20 @@
+services:
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-buyme_local_password}
+      MYSQL_DATABASE: buyme
+    ports:
+      - "3306:3306"
+    volumes:
+      - buyme_mysql_data:/var/lib/mysql
+      - ./buy_me_db.sql:/docker-entrypoint-initdb.d/buy_me_db.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  buyme_mysql_data:
