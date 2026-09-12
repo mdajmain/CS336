@@ -6,9 +6,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/buyme?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "***REMOVED***"; // CHANGE THIS to your MySQL password
+    private static final String URL = System.getenv().getOrDefault("DB_URL",
+        "jdbc:mysql://localhost:3306/buyme?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
+    private static final String USERNAME = System.getenv().getOrDefault("DB_USER", "root");
+    private static final String PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "");
     
     static {
         try {

@@ -29,20 +29,7 @@
         <location>/error/500.jsp</location>
     </error-page>
     
-    <!-- JDBC Configuration -->
-    <context-param>
-        <param-name>db-url</param-name>
-        <param-value>jdbc:mysql://localhost:3306/buyme?useSSL=false&amp;serverTimezone=UTC</param-value>
-    </context-param>
-    
-    <context-param>
-        <param-name>db-user</param-name>
-        <param-value>root</param-value>
-    </context-param>
-    
-    <context-param>
-        <param-name>db-password</param-name>
-        <param-value></param-value>
-    </context-param>
-    
+    <!-- JDBC configuration lives in com.buyme.util.DatabaseConnection, driven by
+         the DB_URL / DB_USER / DB_PASSWORD environment variables. -->
+
 </web-app>

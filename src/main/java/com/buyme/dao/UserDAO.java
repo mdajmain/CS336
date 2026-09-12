@@ -3,29 +3,34 @@ package com.buyme.dao;
 
 import com.buyme.model.User;
 import com.buyme.util.DatabaseConnection;
+import org.mindrot.jbcrypt.BCrypt;
 import java.sql.*;
 
 public class UserDAO {
-    
+
     public User login(String username, String password) {
         User user = null;
-        String sql = "SELECT * FROM user WHERE username = ? AND password = ?";
-        
+        String sql = "SELECT * FROM user WHERE username = ?";
+
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
             pstmt.setString(1, username);
-            pstmt.setString(2, password);
-            
+
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
+                String storedHash = rs.getString("password");
+                if (!BCrypt.checkpw(password, storedHash)) {
+                    return null;
+                }
+
                 user = new User();
                 user.setUserID(rs.getInt("userID"));
                 user.setUsername(rs.getString("username"));
                 user.setEmail(rs.getString("email"));
                 user.setUserType(rs.getString("userType"));
                 user.setCreatedDate(rs.getTimestamp("createdDate"));
-                
+
                 // If end user, get additional details
                 if ("end_user".equals(user.getUserType())) {
                     loadEndUserDetails(user, conn);
@@ -42,12 +47,12 @@ public class UserDAO {
         try {
             conn = DatabaseConnection.getConnection();
             conn.setAutoCommit(false);
-            
+
             // Insert into user table
             String userSql = "INSERT INTO user (username, password, email, userType) VALUES (?, ?, ?, ?)";
             PreparedStatement userStmt = conn.prepareStatement(userSql, Statement.RETURN_GENERATED_KEYS);
             userStmt.setString(1, user.getUsername());
-            userStmt.setString(2, user.getPassword());
+            userStmt.setString(2, BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
             userStmt.setString(3, user.getEmail());
             userStmt.setString(4, "end_user");
             
